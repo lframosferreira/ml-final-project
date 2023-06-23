@@ -1,0 +1,13 @@
+Olá pessoal, segue a tarefa para sumissão dos projetos. Atentem para o seguinte:
+
+1. Você deve submeter o seu código, por exemplo um notebook, de forma que eu possa reproduzir seus experimentos.
+
+2. Juntamente com o código, por exemplo nos comentários, você deve fornecer um link para o seu vídeo explicativo.
+
+3. O vídeo, de preferência gravado no youtube em modo privado, deve "repassar" o código, explicando as decisões que foram feitas.
+
+Em síntese, eu devo ser capaz de reexecutar seu projeto através de seu vídeo e código.
+
+Caso os dados que você usou sejam grandes demais para submeter no moodle, ou caso os dados que você usou sejam privados, produza dados semelhantes aos que usou. Mas, como disse, seu projeto precisa ser reproduzido.
+
+Não é necessário documentação, apenas o vídeo e o código em condições de ser reproduzido.
