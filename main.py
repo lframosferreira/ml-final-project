@@ -73,6 +73,7 @@ start = time.time()
 RANDOM_STATE: np.int8 = 42
 TEST_SIZE: np.float64 = 0.3
 SAVE_FINAL_DATA_CSV: bool = False
+FINAL_DATA_PATH: np.str_ = "data/processed/final_data.csv"
 
 # data
 MAXIMUM_UNIT_LENGTH_STAY: np.int32 = 250
@@ -93,75 +94,81 @@ CROSS_VALIDATION_FOLDS: np.int8 = 5
 # - Complicações no primeira dia de internação na UTI
 # - Dados fisiológicos e laboratorias na primeira hora de internação
 
-# In[76]:
+# In[77]:
 
 
-# getting data from comorbidades and capacidade funcional, plus ages and labels
-df: pd.DataFrame = pd.read_csv("data/raw/folha3.csv")
-ages: pd.Series = df["Age"].copy()
-df: pd.DataFrame = df[
-    df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
-].copy()
-df.dropna(axis=1, thresh=5000, inplace=True)
-df.fillna(value=0, inplace=True)
-labels: pd.DataFrame = df["UnitLengthStay"].copy()
-df = df.iloc[:, 22:]
-sheet_3_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
+if not os.path.exists(FINAL_DATA_PATH):
+    df: pd.DataFrame = pd.read_csv("data/raw/folha3.csv")
+    ages: pd.Series = df["Age"].copy()
+    df: pd.DataFrame = df[
+        df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
+    ].copy()
+    df.dropna(axis=1, thresh=5000, inplace=True)
+    df.fillna(value=0, inplace=True)
+    labels: pd.DataFrame = df["UnitLengthStay"].copy()
+    df = df.iloc[:, 22:]
+    sheet_3_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
 
-# getting data from motivos de internação na UTI
-df = pd.read_csv("data/raw/folha4.csv")
-df: pd.DataFrame = df[
-    df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
-].copy()
-df = df.iloc[:, 21:]
-df.dropna(axis=1, thresh=5000, inplace=True)
-df.fillna(value=0, inplace=True)
-sheet_4_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
+    # getting data from motivos de internação na UTI
+    df = pd.read_csv("data/raw/folha4.csv")
+    df: pd.DataFrame = df[
+        df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
+    ].copy()
+    df = df.iloc[:, 21:]
+    df.dropna(axis=1, thresh=5000, inplace=True)
+    df.fillna(value=0, inplace=True)
+    sheet_4_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
 
-# getting data from complicações no primeiro dia na uti
-df = pd.read_csv("data/raw/folha5.csv")
-df: pd.DataFrame = df[
-    df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
-].copy()
-df = df.iloc[:, 21:]
-df.dropna(axis=1, thresh=5000, inplace=True)
-df.fillna(value=0, inplace=True)
-sheet_5_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
+    # getting data from complicações no primeiro dia na uti
+    df = pd.read_csv("data/raw/folha5.csv")
+    df: pd.DataFrame = df[
+        df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
+    ].copy()
+    df = df.iloc[:, 21:]
+    df.dropna(axis=1, thresh=5000, inplace=True)
+    df.fillna(value=0, inplace=True)
+    sheet_5_df: pd.DataFrame = (df == "Verdadeiro").astype(int)
 
-# getting data from dados fisiologicos na UTI
-df = pd.read_csv("data/raw/folha6.csv")
-df: pd.DataFrame = df[
-    df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
-].copy()
-df = df.iloc[:, 21:]
-df.dropna(axis=1, thresh=5000, inplace=True)
-df.fillna(value=0, inplace=True)
-sheet_6_df: pd.DataFrame = df.copy()
+    # getting data from dados fisiologicos na UTI
+    df = pd.read_csv("data/raw/folha6.csv")
+    df: pd.DataFrame = df[
+        df["UnitLengthStay"].apply(lambda x: x <= MAXIMUM_UNIT_LENGTH_STAY)
+    ].copy()
+    df = df.iloc[:, 21:]
+    df.dropna(axis=1, thresh=5000, inplace=True)
+    df.fillna(value=0, inplace=True)
+    sheet_6_df: pd.DataFrame = df.copy()
 
 
-labels_regression: pd.DataFrame = labels.copy()
-labels_classification: pd.DataFrame = pd.cut(
-    x=labels_regression, bins=BINS, labels=np.arange(len(BINS) - 1)
-)
-labels_classification.name = "isMoreThanOneDayInUnit"
+    labels_regression: pd.DataFrame = labels.copy()
+    labels_classification: pd.DataFrame = pd.cut(
+        x=labels_regression, bins=BINS, labels=np.arange(len(BINS) - 1)
+    )
+    labels_classification.name = "isMoreThanOneDayInUnit"
 
-# joining dataframes into final data
-final_data: pd.DataFrame = pd.concat(
-    [
-        ages,
-        sheet_3_df,
-        sheet_4_df,
-        sheet_5_df,
-        sheet_6_df,
-        labels_regression,
-        labels_classification
-    ],
-    axis=1,
-    join="inner",
-)
+    # joining dataframes into final data
+    final_data: pd.DataFrame = pd.concat(
+        [
+            ages,
+            sheet_3_df,
+            sheet_4_df,
+            sheet_5_df,
+            sheet_6_df,
+            labels_regression,
+            labels_classification
+        ],
+        axis=1,
+        join="inner",
+    )
 
-if SAVE_FINAL_DATA_CSV:
-    final_data.to_csv("data/processed/final_data.csv")
+    if SAVE_FINAL_DATA_CSV:
+        final_data.to_csv("data/processed/final_data.csv")
+
+else:
+    final_data: pd.DataFrame = pd.read_csv(FINAL_DATA_PATH)
+    labels_regression: pd.Series = final_data["UnitLengthStay"].copy()
+    labels_classification: pd.Series = final_data["isMoreThanOneDayInUnit"].copy()
+
 
 features: pd.DataFrame = final_data.iloc[:, :-2].copy()
 
