@@ -31,7 +31,7 @@
 
 # # Bibliotecas utilizadas no desenvolvimento
 
-# In[1]:
+# In[2]:
 
 
 import os
@@ -66,7 +66,7 @@ start = time.time()
 # 
 # Aqui estão as definições de algumas constantes que são utilizadas no decorres do código. Em particular, as constantes _MAXIMUM_UNIT_LENGTH_STAY_ e _NUMBER_OF_BINS_ dizem respeito à forma como os dados de tempo de permanência serão discretizados.
 
-# In[19]:
+# In[3]:
 
 
 # system
@@ -94,7 +94,7 @@ CROSS_VALIDATION_FOLDS: np.int8 = 5
 # - Complicações no primeira dia de internação na UTI
 # - Dados fisiológicos e laboratorias na primeira hora de internação
 
-# In[20]:
+# In[4]:
 
 
 if not os.path.exists(FINAL_DATA_PATH):
@@ -177,7 +177,7 @@ features: pd.DataFrame = final_data.iloc[:, :-2].copy()
 # 
 # Aqui são definidas alguams funções utilitárias para o desenvolvimento do projeto de forma geral.
 
-# In[21]:
+# In[5]:
 
 
 """Compute machine learning models metrics given the predictions and the true values
@@ -259,7 +259,6 @@ def get_run_info(
     if dump:
         dump_filename: np.str_ = dump_filename or f"{type}_run_info{time.time()}"
         with open(dump_filename, "w") as file:
-            print(run_info)
             json.dump(run_info, file, indent=4)
 
     return run_info
@@ -315,7 +314,7 @@ def apply_grid_search(
     with open(f"models/{estimator_name}.pickle", "wb") as file:
         pickle.dump(grid_cv_classifier, file)
     if return_best_run_info:
-        display(grid_cv_classifier.best_params_)
+        print(grid_cv_classifier.best_params_)
         return get_run_info(
             y_true=y_test,
             y_pred=y_pred,
@@ -407,7 +406,7 @@ None
 # 
 # Neste cenário, a partir dos dados disponibilizados, modelo de regressão serão avaliados para a tentativa de prever o tempo de permanência de pacientes na UTI, em dias. As métricas que serão utilizadas para avaliar os  modelos serão o erro absoluto médio, o erro quadrado médio e a raiz do erro quadrado médio.
 
-# In[25]:
+# In[6]:
 
 
 data_regression = train_test_split(
@@ -421,15 +420,11 @@ data_regression = train_test_split(
 # 
 # Esse tipo de modelo faz uso de aleatoriedade para garantir uma boa generalização do modelo e evitar _overfitting_, de modo a construir um bom resultado. Além disso, regressores de floresta aleatória são bons em lidar com relações não lineares entre dados e fornecem ao final do treinamento um conjunto de importâncias das _features_ utilizadas durante o treinamento.
 
-# In[26]:
+# In[7]:
 
 
 rfr_grid: dict = {
-    "n_estimators": [100, 200, 300, 400, 500],
-    "max_features": ["sqrt", "log2", None],
-    "max_depth": [20, 30, 40, 50, 60, None],
-    "criterion": ["squared_error", "absolute_error", "friedman_mse", "poisson"],
-    "random_state": [RANDOM_STATE],
+    "n_estimators": [100],
 }
 apply_grid_search(
     estimator=RandomForestRegressor(),
