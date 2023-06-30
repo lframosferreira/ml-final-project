@@ -31,7 +31,7 @@
 
 # # Bibliotecas utilizadas no desenvolvimento
 
-# In[63]:
+# In[1]:
 
 
 import os
@@ -66,7 +66,7 @@ start = time.time()
 # 
 # Aqui estão as definições de algumas constantes que são utilizadas no decorres do código. Em particular, as constantes _MAXIMUM_UNIT_LENGTH_STAY_ e _NUMBER_OF_BINS_ dizem respeito à forma como os dados de tempo de permanência serão discretizados.
 
-# In[64]:
+# In[19]:
 
 
 # system
@@ -94,7 +94,7 @@ CROSS_VALIDATION_FOLDS: np.int8 = 5
 # - Complicações no primeira dia de internação na UTI
 # - Dados fisiológicos e laboratorias na primeira hora de internação
 
-# In[77]:
+# In[20]:
 
 
 if not os.path.exists(FINAL_DATA_PATH):
@@ -173,21 +173,11 @@ else:
 features: pd.DataFrame = final_data.iloc[:, :-2].copy()
 
 
-# In[ ]:
-
-
-# cleaning up RAM
-
-del df
-del final_data
-del ages
-
-
 # # Utilitários
 # 
 # Aqui são definidas alguams funções utilitárias para o desenvolvimento do projeto de forma geral.
 
-# In[66]:
+# In[21]:
 
 
 """Compute machine learning models metrics given the predictions and the true values
@@ -268,7 +258,8 @@ def get_run_info(
 
     if dump:
         dump_filename: np.str_ = dump_filename or f"{type}_run_info{time.time()}"
-        with open(dump_filename) as file:
+        with open(dump_filename, "w") as file:
+            print(run_info)
             json.dump(run_info, file, indent=4)
 
     return run_info
@@ -321,7 +312,7 @@ def apply_grid_search(
     grid_cv_classifier.fit(X_train, y_train)
     y_pred: npt.NDArray[np.float64] = grid_cv_classifier.predict(X_test)
     estimator_name: np.str_ = estimator.__class__.__name__
-    with open(f"models/{estimator_name}", "wb") as file:
+    with open(f"models/{estimator_name}.pickle", "wb") as file:
         pickle.dump(grid_cv_classifier, file)
     if return_best_run_info:
         display(grid_cv_classifier.best_params_)
@@ -331,7 +322,7 @@ def apply_grid_search(
             type=type,
             plot_confusion_matrix=True,
             dump=True,
-            dump_filename=f"results/{estimator_name}",
+            dump_filename=f"results/{estimator_name}.json",
         )
 
 
@@ -357,11 +348,11 @@ def reset_seeds() -> None:
 # 
 # Os códigos disponiblizados abaixo foram desenvolvidos no meu computador local em um ambiente _Anaconda_, cujas configurações estão disponibilizadas no arquivos _environment.yml_, juntamente das versões dos pacotes utilizados. A versão da linguagem _Python_ utilizada foi a 3.11.3.
 # 
-# INSTRUÇÕES DE COMO RODAR TUDO
+# Para rodar o programa, basta rodar as células iterativamente e acompanhar os resultados que serão mostrados em tela. Os modelos foram todos salvos e armazenados de modo que não fosse necessário fazer todo o _grid search_ a cada utilização do _notebook_.
 
 # # Análise exploratória do conjunto de dados utilizado
 
-# In[67]:
+# In[22]:
 
 
 plt.title("Quantidade de pacientes internados na UTI por X dias")
@@ -376,13 +367,13 @@ None
 # - 0: Pacientes que ficaram um dia na UTI
 # - 1: Pacientes que ficaram mais do que um dia na UTI
 # 
-# Essa escolha foi feita com base nof ato de que a base de dados é extremamente desbalanceada, e grande parte dos pacientes presentes nela ficaram apenas 1 dia na UTI, como podemos ver no gráfico acima.
+# Essa escolha foi feita com base no fato de que a base de dados é extremamente desbalanceada, e grande parte dos pacientes presentes nela ficaram apenas 1 dia na UTI, como podemos ver no gráfico acima.
 
 # In[68]:
 
 
 plt.title("Quantidade de pacientes por classe")
-ax = sns.histplot(data=labels_classification)
+ax = sns.histplot(data=labels_classification, bins=[0, 1, 2])
 for rect in ax.patches:
     height = rect.get_height()
     ax.text(
@@ -395,11 +386,10 @@ for rect in ax.patches:
 ax.set_xlabel(None)
 ax.set_ylabel("Quantidade")
 ax.set_xticks(ticks=np.arange(len(BINS) - 1))
-ax.set_xticklabels(["1 dia na UTI", "Mais que um dia na UTI"])
-None
+ax.set_xticklabels(["1 dia na UTI", "Mais que um dia na UTI"], ha="left")
 
 
-# In[69]:
+# In[24]:
 
 
 plt.title("Quantidade de pacientes por idade")
@@ -417,7 +407,7 @@ None
 # 
 # Neste cenário, a partir dos dados disponibilizados, modelo de regressão serão avaliados para a tentativa de prever o tempo de permanência de pacientes na UTI, em dias. As métricas que serão utilizadas para avaliar os  modelos serão o erro absoluto médio, o erro quadrado médio e a raiz do erro quadrado médio.
 
-# In[70]:
+# In[25]:
 
 
 data_regression = train_test_split(
@@ -431,7 +421,7 @@ data_regression = train_test_split(
 # 
 # Esse tipo de modelo faz uso de aleatoriedade para garantir uma boa generalização do modelo e evitar _overfitting_, de modo a construir um bom resultado. Além disso, regressores de floresta aleatória são bons em lidar com relações não lineares entre dados e fornecem ao final do treinamento um conjunto de importâncias das _features_ utilizadas durante o treinamento.
 
-# In[71]:
+# In[26]:
 
 
 rfr_grid: dict = {
@@ -515,6 +505,8 @@ data_classification = train_test_split(
 
 
 # ## _Support Vector Machine_ (SVM)
+# 
+# O _SVM_ é um modelo de aprendizado de máquina que, em suma, tem como objetivo encontrar o melhor _Perceptron_ dentre aqueles possíveis para a base de dados. Ele, no entanto, funciona bem para classificação de dados não linearmente separáveis, já que com ele é possível utilizar do parâmetro de _kernel_, que aumenta o poder de generalização do modelo linear. É um algoritmo muito útil e que também permite o uso de regulizadores para evitar _overfitting_.
 
 # In[ ]:
 
@@ -524,6 +516,8 @@ apply_grid_search(estimator=SVC(), grid=svm_grid, data=data_classification)
 
 
 # ## _Naive Bayes_
+# 
+# O algoritmo de _Naive Bayes_ é um tipo de algoritmo probabilístico que se baseia inteiramente na estatística bayesiana de probabilidades condicionais. É um modelo simples e por isso já se espera que os resultados obtidos com ele não sejam tão bons.
 
 # In[ ]:
 
@@ -533,6 +527,8 @@ apply_grid_search(estimator=GaussianNB(), grid=nb_grid, data=data_classification
 
 
 # ## _Decision Tree_
+# 
+# O algoritmo de árvore de decisão também é um algoritmo de aprendizado supervisionado simples, que constrói um modelo de árvore em que a cada nó se faz uma "decisão" que irá dividir o conjunto de dados em subconjuntos menores de acordo com as características mais importante no momento das separações.
 
 # In[ ]:
 
@@ -549,6 +545,10 @@ apply_grid_search(
 
 
 # ## _Gradient Boosting Classifier_
+# 
+# Um modelo de _Gradient Boosting_, como já citado no caso anterior de regressão, é um modelo de _ensemble_ estatístico, similar à outros modelos de _boosting_, de modo que utiliza a combinação de diversos outros modelos fracos (principalmente árvores de decisão) para chegar a um resultado eficiente. Em particular, o algoritmo de _Gradient Boosting_ faz o uso de descidas de gradiente para minimizar sua função de perda durante o treinamento, e daí vêm o seu nome. 
+# 
+# Para o caso de aprendizado supervisionado, o algoritmo irá tentar utilizar um modelo de votos entre cada modelo fraco criado para encontrar o resultado fnal de uma instância cuja qual deseja-se saber a classe.
 
 # In[ ]:
 
@@ -567,6 +567,8 @@ apply_grid_search(
 
 
 # ## _Random Forest Classifier_
+# 
+# Da mesma forma, assim como explicado no caso de regressão, um algoritmo de floresta aleatória faz o uso de diversos modelos fracos e os combina para alcançar um resultado otimizado na hora da classificação.
 
 # In[ ]:
 
@@ -584,6 +586,8 @@ apply_grid_search(
 
 
 # ## _XGBoost_
+# 
+# Por fim, também como já citado, o algoritmo de _XGBoost_ também faz uso de um modelo de _boosting_ para classificar as instâncias, embora seja um caso particular e extremo do _Gradient Boosting_.
 
 # In[ ]:
 
@@ -601,7 +605,11 @@ apply_grid_search(
 
 # ## Conclusão
 # 
-# O trabalho pipipi popopo
+# O projeto final da disciplina permitiu que diversos modelos diferentes pudessem ser avaliados no processo de previsão de uma variável aleatória desejada. Em particular, dada a natureza dos dados disponibilizados, foi possível experimentar tantos modelos de regressão como modelos de classificação, o que garantiu que os conteúdos vistos em sala pudessem ser ainda melhor absorvidos e expandidos.
+# 
+# Outro fator interessante é  o uso do _grid search_ para otimização dos hiperparâmetros. O projeto forneceu um ambiente favorável para aumentar e praticar o conhecimento relativo à esse tipo de técnica, assim como também de fatores relacionados à _cross validation_, métricas e funções de perda, etc.
+# 
+# Em relação ao resultado obtido, infere-se que com uma base de dados maior um modelo mais efetivo pode ser criado. 7000 instâncias é um valor de certa forma limitante para garantia de de criação de um modelo classificador ou previsor de alta capacidade. No entanto, entende-se que a coleta de dados clínicos não é uma realidade fácil e, dado o que foi obtido, acredita-se que os resultados tidos até aqui tenham sim um valor alto para aqueles que se interessam e podem ser utilizados para entender melhor o funcionamento dos tratamentos ofertados e a alocação de recursos na UTI.
 
 # ## Referências
 # 
@@ -610,11 +618,13 @@ apply_grid_search(
 # ### Algoritmos
 # 
 # - [_Random Forest_](https://www.analyticsvidhya.com/blog/2021/06/understanding-random-forest/)
+# - [_Gradient Boosting_](https://www.analyticsvidhya.com/blog/2021/09/gradient-boosting-algorithm-a-complete-guide-for-beginners/)
 # - [_XGBoost_](https://arxiv.org/pdf/1603.02754.pdf)
 # 
 # ### Técnicas
 # 
 # - [_Grid search_](https://towardsdatascience.com/cross-validation-and-grid-search-efa64b127c1b)
+# - [_Cross validation_](https://scikit-learn.org/stable/modules/cross_validation.html)
 # 
 
 # In[ ]:
