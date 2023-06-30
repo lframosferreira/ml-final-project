@@ -424,7 +424,11 @@ data_regression = train_test_split(
 
 
 rfr_grid: dict = {
-    "n_estimators": [100],
+    "n_estimators": [100, 200, 300, 400, 500],
+    "max_features": ["sqrt", "log2", None],
+    "max_depth": [20, 30, 40, 50, 60, None],
+    "criterion": ["squared_error", "absolute_error", "friedman_mse", "poisson"],
+    "random_state": [RANDOM_STATE],
 }
 apply_grid_search(
     estimator=RandomForestRegressor(),
