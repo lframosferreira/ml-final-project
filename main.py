@@ -74,7 +74,7 @@ RANDOM_STATE: np.int8 = 42
 TEST_SIZE: np.float64 = 0.3
 SAVE_FINAL_DATA_CSV: bool = False
 FINAL_DATA_PATH: np.str_ = "data/processed/final_data.csv"
-COMPUTE_MODELS: bool = False
+COMPUTE_MODELS: bool = True 
 
 # data
 MAXIMUM_UNIT_LENGTH_STAY: np.int32 = 250
@@ -347,11 +347,11 @@ dict
 
 def print_run_info(file_path: np.str_, type: np.str_ = "classification") -> None:
     with open(file_path, "r") as file:
-        run_info: dict = json.loads(file)
+        run_info: dict = json.load(file)
     print(run_info)
     if type == "classification":
         metrics.ConfusionMatrixDisplay(
-            confusion_matrix=run_info["confusion_matrix"],
+            confusion_matrix=np.array(run_info["confusion_matrix"]),
             display_labels=["Um dia na UTI", "Mais que um dia na UTI"],
         ).plot()
 
