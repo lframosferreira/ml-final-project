@@ -1,0 +1,6 @@
+{
+    "accuracy_score": 0.6947318908748824,
+    "precision_score": 0.6947318908748824,
+    "recall_score": 1.0,
+    "f1_score": 0.8198723286150431,
+    "confusion_matrix": 
