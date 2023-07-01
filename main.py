@@ -31,7 +31,7 @@
 
 # # Bibliotecas utilizadas no desenvolvimento
 
-# In[2]:
+# In[74]:
 
 
 import os
@@ -55,7 +55,7 @@ from sklearn.ensemble import (
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, CategoricalNB
 from sklearn import metrics
 import xgboost as xgb
 
@@ -66,7 +66,7 @@ start = time.time()
 # 
 # Aqui estão as definições de algumas constantes que são utilizadas no decorres do código. Em particular, as constantes _MAXIMUM_UNIT_LENGTH_STAY_ e _NUMBER_OF_BINS_ dizem respeito à forma como os dados de tempo de permanência serão discretizados.
 
-# In[3]:
+# In[75]:
 
 
 # system
@@ -74,6 +74,7 @@ RANDOM_STATE: np.int8 = 42
 TEST_SIZE: np.float64 = 0.3
 SAVE_FINAL_DATA_CSV: bool = False
 FINAL_DATA_PATH: np.str_ = "data/processed/final_data.csv"
+COMPUTE_MODELS: bool = False
 
 # data
 MAXIMUM_UNIT_LENGTH_STAY: np.int32 = 250
@@ -94,7 +95,7 @@ CROSS_VALIDATION_FOLDS: np.int8 = 5
 # - Complicações no primeira dia de internação na UTI
 # - Dados fisiológicos e laboratorias na primeira hora de internação
 
-# In[4]:
+# In[76]:
 
 
 if not os.path.exists(FINAL_DATA_PATH):
@@ -165,7 +166,7 @@ if not os.path.exists(FINAL_DATA_PATH):
         final_data.to_csv("data/processed/final_data.csv")
 
 else:
-    final_data: pd.DataFrame = pd.read_csv(FINAL_DATA_PATH)
+    final_data: pd.DataFrame = pd.read_csv(FINAL_DATA_PATH, index_col=0)
     labels_regression: pd.Series = final_data["UnitLengthStay"].copy()
     labels_classification: pd.Series = final_data["isMoreThanOneDayInUnit"].copy()
 
@@ -177,7 +178,7 @@ features: pd.DataFrame = final_data.iloc[:, :-2].copy()
 # 
 # Aqui são definidas alguams funções utilitárias para o desenvolvimento do projeto de forma geral.
 
-# In[5]:
+# In[77]:
 
 
 """Compute machine learning models metrics given the predictions and the true values
@@ -230,7 +231,7 @@ def get_run_info(
             "precision_score": precision_score,
             "recall_score": recall_score,
             "f1_score": f1_score,
-            "confusion_matrix": confusion_matrix,
+            "confusion_matrix": confusion_matrix.tolist(),
         }
 
         if plot_confusion_matrix:
@@ -293,9 +294,12 @@ def apply_grid_search(
     type: np.str_ = "classification",
     return_best_run_info: bool = True,
 ) -> dict:
+    if not COMPUTE_MODELS:
+        return
     if type == "classification":
         scorer = metrics.make_scorer(metrics.fbeta_score, beta=1.2)
     else:
+        return
         scorer = metrics.make_scorer(
             metrics.mean_squared_error, squared=False, greater_is_better=False
         )
@@ -325,6 +329,33 @@ def apply_grid_search(
         )
 
 
+"""Print run info from file
+
+Parameters
+----------
+file_path: np.str_
+    The path to the run info JSON file
+type: np.str_
+    The type of model used to make the predictions (default is 'classification')
+
+Returns
+-------
+dict
+    A dictionary with the metrics run information
+"""
+
+
+def print_run_info(file_path: np.str_, type: np.str_ = "classification") -> None:
+    with open(file_path, "r") as file:
+        run_info: dict = json.loads(file)
+    print(run_info)
+    if type == "classification":
+        metrics.ConfusionMatrixDisplay(
+            confusion_matrix=run_info["confusion_matrix"],
+            display_labels=["Um dia na UTI", "Mais que um dia na UTI"],
+        ).plot()
+
+
 """Reset random number geneators seeds
 
 Parameters
@@ -351,7 +382,7 @@ def reset_seeds() -> None:
 
 # # Análise exploratória do conjunto de dados utilizado
 
-# In[22]:
+# In[78]:
 
 
 plt.title("Quantidade de pacientes internados na UTI por X dias")
@@ -368,7 +399,7 @@ None
 # 
 # Essa escolha foi feita com base no fato de que a base de dados é extremamente desbalanceada, e grande parte dos pacientes presentes nela ficaram apenas 1 dia na UTI, como podemos ver no gráfico acima.
 
-# In[68]:
+# In[79]:
 
 
 plt.title("Quantidade de pacientes por classe")
@@ -378,7 +409,7 @@ for rect in ax.patches:
     ax.text(
         rect.get_x() + rect.get_width() / 2,
         height,
-        f"{height}",
+        f"{height}", 
         ha="center",
         va="bottom",
     )
@@ -386,9 +417,10 @@ ax.set_xlabel(None)
 ax.set_ylabel("Quantidade")
 ax.set_xticks(ticks=np.arange(len(BINS) - 1))
 ax.set_xticklabels(["1 dia na UTI", "Mais que um dia na UTI"], ha="left")
+None
 
 
-# In[24]:
+# In[80]:
 
 
 plt.title("Quantidade de pacientes por idade")
@@ -406,7 +438,7 @@ None
 # 
 # Neste cenário, a partir dos dados disponibilizados, modelo de regressão serão avaliados para a tentativa de prever o tempo de permanência de pacientes na UTI, em dias. As métricas que serão utilizadas para avaliar os  modelos serão o erro absoluto médio, o erro quadrado médio e a raiz do erro quadrado médio.
 
-# In[6]:
+# In[81]:
 
 
 data_regression = train_test_split(
@@ -420,7 +452,7 @@ data_regression = train_test_split(
 # 
 # Esse tipo de modelo faz uso de aleatoriedade para garantir uma boa generalização do modelo e evitar _overfitting_, de modo a construir um bom resultado. Além disso, regressores de floresta aleatória são bons em lidar com relações não lineares entre dados e fornecem ao final do treinamento um conjunto de importâncias das _features_ utilizadas durante o treinamento.
 
-# In[7]:
+# In[82]:
 
 
 rfr_grid: dict = {
@@ -436,6 +468,7 @@ apply_grid_search(
     type="regression",
     data=data_regression,
 )
+print_run_info(file_path="results/RandomForestRegressor.json", type="regression")
 
 
 # ## _Gradient Boosting Regressor_
@@ -459,6 +492,7 @@ apply_grid_search(
     type="regression",
     data=data_regression,
 )
+print_run_info(file_path="results/GradientBoostingRegressor.json", type="regression")
 
 
 # ## _XGBoost Regressor_
@@ -480,6 +514,7 @@ apply_grid_search(
     type="regression",
     data=data_regression,
 )
+print_run_info(file_path="results/XGBRegressor.json", type="regression")
 
 
 # importqncia blablabla
@@ -495,7 +530,7 @@ apply_grid_search(
 
 # ## Separação do dados
 
-# In[ ]:
+# In[85]:
 
 
 data_classification = train_test_split(
@@ -512,6 +547,7 @@ data_classification = train_test_split(
 
 svm_grid: dict = {"kernel": ["linear", "sigmoid", "poly", "rbf"], "degree": [3, 4]}
 apply_grid_search(estimator=SVC(), grid=svm_grid, data=data_classification)
+print_run_info(file_path="results/SVC.json")
 
 
 # ## _Naive Bayes_
@@ -523,6 +559,7 @@ apply_grid_search(estimator=SVC(), grid=svm_grid, data=data_classification)
 
 nb_grid: dict = {}
 apply_grid_search(estimator=GaussianNB(), grid=nb_grid, data=data_classification)
+print_run_info(file_path="results/GaussianNB.json")
 
 
 # ## _Decision Tree_
@@ -541,6 +578,7 @@ dt_grid: dict = {
 apply_grid_search(
     estimator=DecisionTreeClassifier(), grid=dt_grid, data=data_classification
 )
+print_run_info(file_path="results/DecisionTreeClassifier.json")
 
 
 # ## _Gradient Boosting Classifier_
@@ -563,6 +601,7 @@ gbc_grid: dict = {
 apply_grid_search(
     estimator=GradientBoostingClassifier(), grid=gbc_grid, data=data_classification
 )
+print_run_info(file_path="results/GradientBoostingClassifier.json")
 
 
 # ## _Random Forest Classifier_
@@ -582,6 +621,7 @@ rfc_grid: dict = {
 apply_grid_search(
     estimator=RandomForestClassifier(), grid=rfc_grid, data=data_classification
 )
+print_run_info(file_path="results/RandomForestClassifier.json")
 
 
 # ## _XGBoost_
@@ -600,6 +640,7 @@ xgbc_grid: dict = {
 apply_grid_search(
     estimator=xgb.XGBClassifier(), grid=xgbc_grid, data=data_classification
 )
+print_run_info(file_path="results/XGBClassifier.json")
 
 
 # ## Conclusão
