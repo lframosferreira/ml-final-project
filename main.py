@@ -7,7 +7,7 @@
 # 
 # ### Luís Felipe Ramos Ferreira - 2019022553
 # 
-# Link para apresentação no youtube: link
+# Link para apresentação no youtube: https://youtu.be/bOuzWH4EJhI
 # 
 
 # # Introdução
@@ -37,7 +37,7 @@
 # # Bibliotecas utilizadas no desenvolvimento
 # 
 
-# In[109]:
+# In[1]:
 
 
 import os
@@ -71,7 +71,7 @@ import xgboost as xgb
 # Aqui estão as definições de algumas constantes que são utilizadas no decorres do código. Em particular, as constantes _MAXIMUM_UNIT_LENGTH_STAY_ e _NUMBER_OF_BINS_ dizem respeito à forma como os dados de tempo de permanência serão discretizados.
 # 
 
-# In[110]:
+# In[2]:
 
 
 # system
@@ -101,7 +101,7 @@ CROSS_VALIDATION_FOLDS: np.int8 = 5
 # - Dados fisiológicos e laboratorias na primeira hora de internação
 # 
 
-# In[111]:
+# In[3]:
 
 
 if not os.path.exists(FINAL_DATA_PATH):
@@ -184,7 +184,7 @@ features: pd.DataFrame = final_data.iloc[:, :-2].copy()
 # Aqui são definidas alguams funções utilitárias para o desenvolvimento do projeto de forma geral.
 # 
 
-# In[112]:
+# In[4]:
 
 
 """Compute machine learning models metrics given the predictions and the true values
@@ -195,7 +195,7 @@ y_true : npt.NDArray[np.float64]
     The true values
 y_pred : npt.NDArray[np.float64]
     The predictions
-type: np.str_
+type: np.str_1280x720
     The type of model used to make the predictions (default is 'classification')
 dump: bool, optional
     A flag used to dump or not the JSON created with the metrics (default is False)
@@ -391,7 +391,7 @@ def reset_seeds() -> None:
 # # Análise exploratória do conjunto de dados utilizado
 # 
 
-# In[113]:
+# In[5]:
 
 
 plt.title("Quantidade de pacientes internados na UTI por X dias")
@@ -409,7 +409,7 @@ None
 # Essa escolha foi feita com base no fato de que a base de dados é extremamente desbalanceada, e grande parte dos pacientes presentes nela ficaram apenas 1 dia na UTI, como podemos ver no gráfico acima.
 # 
 
-# In[114]:
+# In[6]:
 
 
 plt.title("Quantidade de pacientes por classe")
@@ -430,7 +430,7 @@ ax.set_xticklabels(["1 dia na UTI", "Mais que um dia na UTI"], ha="left")
 None
 
 
-# In[115]:
+# In[7]:
 
 
 plt.title("Quantidade de pacientes por idade")
@@ -450,7 +450,7 @@ None
 # Neste cenário, a partir dos dados disponibilizados, modelo de regressão serão avaliados para a tentativa de prever o tempo de permanência de pacientes na UTI, em dias. As métricas que serão utilizadas para avaliar os modelos serão o erro absoluto médio, o erro quadrado médio e a raiz do erro quadrado médio.
 # 
 
-# In[116]:
+# In[8]:
 
 
 data_regression = train_test_split(
@@ -465,7 +465,7 @@ data_regression = train_test_split(
 # Esse tipo de modelo faz uso de aleatoriedade para garantir uma boa generalização do modelo e evitar _overfitting_, de modo a construir um bom resultado. Além disso, regressores de floresta aleatória são bons em lidar com relações não lineares entre dados e fornecem ao final do treinamento um conjunto de importâncias das _features_ utilizadas durante o treinamento.
 # 
 
-# In[117]:
+# In[9]:
 
 
 rfr_grid: dict = {
@@ -490,7 +490,7 @@ print_run_info(file_path="results/RandomForestRegressor.json", type="regression"
 # Um modelo de _Gradient Boosting_ é também um modelo de _ensemble_ estatístico, similar à outros modelos de _boosting_, de modo que utiliza a combinação de diversos outros modelos fracos (principalmente árvores de decisão) para chegar a um resultado eficiente. Em particular, o algoritmo de _Gradient Boosting_ faz o uso de descidas de gradiente para minimizar sua função de perda durante o treinamento, e daí vêm o seu nome.
 # 
 
-# In[118]:
+# In[10]:
 
 
 gbr_grid: dict = {
@@ -516,7 +516,7 @@ print_run_info(file_path="results/GradientBoostingRegressor.json", type="regress
 # Tal qual os outros algoritmos citados, o _XGBoost_ também é uma abordagem de modelo de aprnedizado de máquina que faz uso de _bosting_ para alcançar um resultado favorável. Ele é um tipo de _gradient boosting_, ou seja, faz uso de descidas de gradiente para minimizar sua função de perda. Sua implementação, no entanto, é um pouco mais extrema e complexa do que a de um _gradient boosting_ padrão, como visto anteriormente, e daí também vẽm sue nome.
 # 
 
-# In[119]:
+# In[11]:
 
 
 xgbr_grid: dict = {
@@ -546,7 +546,7 @@ print_run_info(file_path="results/XGBRegressor.json", type="regression")
 # ## Separação do dados
 # 
 
-# In[120]:
+# In[12]:
 
 
 data_classification = train_test_split(
@@ -559,7 +559,7 @@ data_classification = train_test_split(
 # O _SVM_ é um modelo de aprendizado de máquina que, em suma, tem como objetivo encontrar o melhor _Perceptron_ dentre aqueles possíveis para a base de dados. Ele, no entanto, funciona bem para classificação de dados não linearmente separáveis, já que com ele é possível utilizar do parâmetro de _kernel_, que aumenta o poder de generalização do modelo linear. É um algoritmo muito útil e que também permite o uso de regulizadores para evitar _overfitting_.
 # 
 
-# In[121]:
+# In[13]:
 
 
 svm_grid: dict = {"kernel": ["linear", "sigmoid", "poly", "rbf"], "degree": [3, 4]}
@@ -572,7 +572,7 @@ print_run_info(file_path="results/SVC.json")
 # O algoritmo de _Naive Bayes_ é um tipo de algoritmo probabilístico que se baseia inteiramente na estatística bayesiana de probabilidades condicionais. É um modelo simples e por isso já se espera que os resultados obtidos com ele não sejam tão bons.
 # 
 
-# In[122]:
+# In[14]:
 
 
 nb_grid: dict = {}
@@ -585,7 +585,7 @@ print_run_info(file_path="results/GaussianNB.json")
 # O algoritmo de árvore de decisão também é um algoritmo de aprendizado supervisionado simples, que constrói um modelo de árvore em que a cada nó se faz uma "decisão" que irá dividir o conjunto de dados em subconjuntos menores de acordo com as características mais importante no momento das separações.
 # 
 
-# In[123]:
+# In[15]:
 
 
 dt_grid: dict = {
@@ -607,7 +607,7 @@ print_run_info(file_path="results/DecisionTreeClassifier.json")
 # Para o caso de aprendizado supervisionado, o algoritmo irá tentar utilizar um modelo de votos entre cada modelo fraco criado para encontrar o resultado fnal de uma instância cuja qual deseja-se saber a classe.
 # 
 
-# In[124]:
+# In[16]:
 
 
 gbc_grid: dict = {
@@ -629,7 +629,7 @@ print_run_info(file_path="results/GradientBoostingClassifier.json")
 # Da mesma forma, assim como explicado no caso de regressão, um algoritmo de floresta aleatória faz o uso de diversos modelos fracos e os combina para alcançar um resultado otimizado na hora da classificação.
 # 
 
-# In[125]:
+# In[17]:
 
 
 rfc_grid: dict = {
@@ -650,7 +650,7 @@ print_run_info(file_path="results/RandomForestClassifier.json")
 # Por fim, também como já citado, o algoritmo de _XGBoost_ também faz uso de um modelo de _boosting_ para classificar as instâncias, embora seja um caso particular e extremo do _Gradient Boosting_.
 # 
 
-# In[126]:
+# In[18]:
 
 
 xgbc_grid: dict = {
@@ -668,7 +668,7 @@ print_run_info(file_path="results/XGBClassifier.json")
 # # Comparação entre modelos
 # 
 
-# In[127]:
+# In[19]:
 
 
 if not os.path.exists("results/"):
@@ -698,14 +698,14 @@ for result_file in [x for x in os.listdir("results") if x not in REGRESSION_FILE
     classification_results.append(aux)
 
 
-# In[128]:
+# In[20]:
 
 
 df: pd.DataFrame = pd.DataFrame.from_records(regression_results)
 df
 
 
-# In[129]:
+# In[21]:
 
 
 df: pd.DataFrame = pd.DataFrame.from_records(classification_results)
